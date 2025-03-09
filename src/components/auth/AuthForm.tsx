@@ -37,23 +37,7 @@ export const AuthForm: React.FC = () => {
   const location = useLocation();
   const [hasInviteCodeFromUrl, setHasInviteCodeFromUrl] = useState(false);
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const inviteCode = params.get("invite");
-    
-    if (inviteCode) {
-      setMode("register");
-      registerForm.setValue("inviteCode", inviteCode);
-      setHasInviteCodeFromUrl(true);
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
-
+  // Initialize forms
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -71,6 +55,24 @@ export const AuthForm: React.FC = () => {
       confirmPassword: "",
     },
   });
+
+  // Check for invite code in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const inviteCode = params.get("invite");
+    
+    if (inviteCode) {
+      setMode("register");
+      registerForm.setValue("inviteCode", inviteCode);
+      setHasInviteCodeFromUrl(true);
+    }
+  }, [location, registerForm]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     try {
@@ -96,12 +98,15 @@ export const AuthForm: React.FC = () => {
     }
   };
 
+  // Toggle between login and register modes
   const toggleMode = () => {
-    setMode(mode === "login" ? "register" : "login");
-  };
-
-  const goToWebPlayer = () => {
-    window.open("https://hd.vcomputer.ru", "_blank");
+    if (mode === "login") {
+      // Switch to register mode - we explicitly don't copy over username
+      setMode("register");
+    } else {
+      // Switch to login mode
+      setMode("login");
+    }
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
@@ -34,7 +35,7 @@ export const AuthForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [hasInviteCode, setHasInviteCode] = useState(false);
+  const [hasInviteCodeFromUrl, setHasInviteCodeFromUrl] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -43,7 +44,7 @@ export const AuthForm: React.FC = () => {
     if (inviteCode) {
       setMode("register");
       registerForm.setValue("inviteCode", inviteCode);
-      setHasInviteCode(true);
+      setHasInviteCodeFromUrl(true);
     }
   }, [location]);
 
@@ -159,21 +160,24 @@ export const AuthForm: React.FC = () => {
         ) : (
           <Form {...registerForm}>
             <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-              {!hasInviteCode && (
-                <FormField
-                  control={registerForm.control}
-                  name="inviteCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Код приглашения</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Введите код приглашения" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              <FormField
+                control={registerForm.control}
+                name="inviteCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Код приглашения</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Введите код приглашения" 
+                        {...field} 
+                        readOnly={hasInviteCodeFromUrl}
+                        className={hasInviteCodeFromUrl ? "bg-muted cursor-not-allowed" : ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={registerForm.control}
                 name="username"
@@ -181,7 +185,11 @@ export const AuthForm: React.FC = () => {
                   <FormItem>
                     <FormLabel>Имя пользователя</FormLabel>
                     <FormControl>
-                      <Input placeholder="Выберите имя пользователя" {...field} autoComplete="username" />
+                      <Input 
+                        placeholder="Выберите имя пользователя" 
+                        {...field} 
+                        autoComplete="username" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

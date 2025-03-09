@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Apple, ExternalLink, Smartphone } from "lucide-react";
+import { Loader2, Apple, ExternalLink, Android } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
@@ -35,9 +35,26 @@ export const AuthForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [hasInviteCodeFromUrl, setHasInviteCodeFromUrl] = useState(false);
+  const [hasInviteCode, setHasInviteCode] = useState(false);
 
-  // Initialize forms
+  // Get invite code from URL if present
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const inviteCode = params.get("invite");
+    
+    if (inviteCode) {
+      setMode("register");
+      registerForm.setValue("inviteCode", inviteCode);
+      setHasInviteCode(true);
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
+
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -55,24 +72,6 @@ export const AuthForm: React.FC = () => {
       confirmPassword: "",
     },
   });
-
-  // Check for invite code in URL
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const inviteCode = params.get("invite");
-    
-    if (inviteCode) {
-      setMode("register");
-      registerForm.setValue("inviteCode", inviteCode);
-      setHasInviteCodeFromUrl(true);
-    }
-  }, [location, registerForm]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
 
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     try {
@@ -98,15 +97,12 @@ export const AuthForm: React.FC = () => {
     }
   };
 
-  // Toggle between login and register modes
   const toggleMode = () => {
-    if (mode === "login") {
-      // Switch to register mode - we explicitly don't copy over username
-      setMode("register");
-    } else {
-      // Switch to login mode
-      setMode("login");
-    }
+    setMode(mode === "login" ? "register" : "login");
+  };
+
+  const goToWebPlayer = () => {
+    window.open("https://hd.vcomputer.ru", "_blank");
   };
 
   return (
@@ -165,24 +161,21 @@ export const AuthForm: React.FC = () => {
         ) : (
           <Form {...registerForm}>
             <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-              <FormField
-                control={registerForm.control}
-                name="inviteCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Код приглашения</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Введите код приглашения" 
-                        {...field} 
-                        readOnly={hasInviteCodeFromUrl}
-                        className={hasInviteCodeFromUrl ? "bg-muted cursor-not-allowed" : ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!hasInviteCode && (
+                <FormField
+                  control={registerForm.control}
+                  name="inviteCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Код приглашения</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Введите код приглашения" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={registerForm.control}
                 name="username"
@@ -190,11 +183,7 @@ export const AuthForm: React.FC = () => {
                   <FormItem>
                     <FormLabel>Имя пользователя</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Выберите имя пользователя" 
-                        {...field} 
-                        autoComplete="username" 
-                      />
+                      <Input placeholder="Выберите имя пользователя" {...field} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

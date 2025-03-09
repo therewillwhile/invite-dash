@@ -1,10 +1,11 @@
+
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Apple, Smartphone, ExternalLink } from "lucide-react";
+import { Apple, Android, ExternalLink } from "lucide-react";
 
 const Index: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -68,7 +69,7 @@ const Index: React.FC = () => {
             className="flex gap-2 items-center"
             variant="outline"
           >
-            <Smartphone size={16} />
+            <Android size={16} />
             Android приложение
           </Button>
         </div>

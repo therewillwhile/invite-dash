@@ -1,175 +1,125 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { respondToTicket, type Ticket, type User } from "@/services/api";
-import { Check, X, MessageCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { Ticket, respondToTicket } from "@/services/api";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { CheckCircle, XCircle, Clock } from "lucide-react";
 
 interface TicketItemProps {
   ticket: Ticket;
-  user?: User | null;
-  onStatusChange: () => void;
+  onUpdate: () => void;
 }
 
-export const TicketItem: React.FC<TicketItemProps> = ({
-  ticket,
-  user,
-  onStatusChange,
-}) => {
-  const { user: currentUser } = useAuth();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<"approve" | "reject">("approve");
+export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onUpdate }) => {
+  const { user } = useAuth();
   const [response, setResponse] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const getStatusBadge = () => {
-    switch (ticket.status) {
-      case "pending":
-        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">Pending</Badge>;
-      case "approved":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800">Approved</Badge>;
-      case "rejected":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800">Rejected</Badge>;
-      default:
-        return null;
-    }
+  
+  const statusIcons = {
+    pending: <Clock className="h-4 w-4 text-yellow-500" />,
+    approved: <CheckCircle className="h-4 w-4 text-green-500" />,
+    rejected: <XCircle className="h-4 w-4 text-red-500" />
   };
-
-  const handleDialogOpen = (mode: "approve" | "reject") => {
-    setDialogMode(mode);
-    setIsDialogOpen(true);
+  
+  const statusColors = {
+    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    approved: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
   };
-
-  const handleSubmit = async () => {
+  
+  const canRespond = user?.isAdmin && ticket.status === "pending";
+  
+  const handleRespond = async (status: "approved" | "rejected") => {
+    if (!canRespond) return;
+    
     try {
       setIsSubmitting(true);
-      await respondToTicket(ticket.id, dialogMode, response);
-      toast.success(
-        `Ticket ${dialogMode === "approve" ? "approved" : "rejected"} successfully`
-      );
-      setIsDialogOpen(false);
-      setResponse("");
-      onStatusChange();
+      await respondToTicket(ticket.id, status, response);
+      toast.success(`Ticket ${status === "approved" ? "approved" : "rejected"} successfully`);
+      onUpdate();
     } catch (error) {
-      console.error("Failed to respond to ticket:", error);
+      console.error("Error responding to ticket:", error);
+      toast.error("Failed to respond to ticket");
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <>
-      <Card className="w-full overflow-hidden">
-        <CardHeader className="pb-2 flex flex-row items-start justify-between">
+    <Card className="w-full border-l-4" style={{ borderLeftColor: 
+      ticket.status === "pending" ? "#eab308" : 
+      ticket.status === "approved" ? "#22c55e" : "#ef4444" 
+    }}>
+      <CardHeader>
+        <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="text-lg font-semibold">{ticket.title}</CardTitle>
-            <div className="text-xs text-muted-foreground mt-1">
-              Submitted: {new Date(ticket.createdAt).toLocaleDateString()}
-            </div>
+            <CardTitle className="text-lg">{ticket.title}</CardTitle>
+            <CardDescription>
+              Submitted on {format(new Date(ticket.createdAt), "PPP")}
+            </CardDescription>
           </div>
-          {getStatusBadge()}
-        </CardHeader>
-        
+          <Badge className={statusColors[ticket.status]} variant="outline">
+            <span className="flex items-center gap-1">
+              {statusIcons[ticket.status]}
+              {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+            </span>
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
         {ticket.description && (
-          <CardContent className="pb-2">
-            <p className="text-sm">{ticket.description}</p>
-          </CardContent>
+          <div className="mb-4">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Description:</p>
+            <p className="text-sm whitespace-pre-line">{ticket.description}</p>
+          </div>
         )}
         
         {ticket.response && (
-          <CardContent className="pb-2 pt-0">
-            <div className="bg-muted p-3 rounded-md mt-2">
-              <div className="text-xs font-semibold mb-1 flex items-center">
-                <MessageCircle className="h-3 w-3 mr-1" />
-                Response:
-              </div>
-              <p className="text-sm">{ticket.response}</p>
-            </div>
-          </CardContent>
+          <div className="mt-4 bg-muted p-3 rounded-md">
+            <p className="text-sm font-medium mb-1">Response:</p>
+            <p className="text-sm whitespace-pre-line">{ticket.response}</p>
+          </div>
         )}
         
-        {currentUser?.isAdmin && ticket.status === "pending" && (
-          <CardFooter className="flex gap-2 pt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
-              onClick={() => handleDialogOpen("approve")}
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Approve
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
-              onClick={() => handleDialogOpen("reject")}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Reject
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {dialogMode === "approve" ? "Approve" : "Reject"} Ticket
-            </DialogTitle>
-            <DialogDescription>
-              {dialogMode === "approve"
-                ? "Add an optional message for the user."
-                : "Please provide a reason for rejecting this request."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-2">Ticket: {ticket.title}</p>
-            </div>
-            <Textarea
-              placeholder={
-                dialogMode === "approve"
-                  ? "Optional message for the user"
-                  : "Reason for rejection"
-              }
-              value={response}
+        {canRespond && (
+          <div className="mt-4">
+            <p className="text-sm font-medium mb-2">Respond to ticket:</p>
+            <Textarea 
+              value={response} 
               onChange={(e) => setResponse(e.target.value)}
-              rows={4}
-              required={dialogMode === "reject"}
+              placeholder="Write your response here..."
+              className="mb-2"
+              rows={3}
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={dialogMode === "reject" && !response.trim() || isSubmitting}
-              className={
-                dialogMode === "approve"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }
-            >
-              {isSubmitting ? "Processing..." : dialogMode === "approve" ? "Approve" : "Reject"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </CardContent>
+      
+      {canRespond && (
+        <CardFooter className="flex gap-2 justify-end">
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => handleRespond("rejected")}
+            disabled={isSubmitting}
+          >
+            Reject
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm"
+            onClick={() => handleRespond("approved")}
+            disabled={isSubmitting}
+          >
+            Approve
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
   );
 };

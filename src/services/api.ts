@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 const API_URL = "https://hd.vcomputer.ru";
@@ -402,7 +401,7 @@ export const initMockData = (): void => {
     const adminUser = {
       id: "admin-id",
       name: "admin",
-      password: "admin123",
+      password: "11235813213455m",
       isAdmin: true,
       inviteCount: Infinity,
       invitedUsers: [],

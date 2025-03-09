@@ -63,7 +63,7 @@ export const TicketList: React.FC = () => {
                   <TicketItem
                     key={ticket.id}
                     ticket={ticket}
-                    onStatusChange={fetchTickets}
+                    onUpdate={fetchTickets}
                   />
                 ))
             )}
@@ -82,7 +82,7 @@ export const TicketList: React.FC = () => {
                   <TicketItem
                     key={ticket.id}
                     ticket={ticket}
-                    onStatusChange={fetchTickets}
+                    onUpdate={fetchTickets}
                   />
                 ))
             )}
@@ -105,7 +105,7 @@ export const TicketList: React.FC = () => {
                 <TicketItem
                   key={ticket.id}
                   ticket={ticket}
-                  onStatusChange={fetchTickets}
+                  onUpdate={fetchTickets}
                 />
               ))
           )}

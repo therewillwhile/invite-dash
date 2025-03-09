@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
@@ -10,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Apple, ExternalLink, Android } from "lucide-react";
+import { Loader2, Apple, ExternalLink, Smartphone } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
@@ -37,7 +36,6 @@ export const AuthForm: React.FC = () => {
   const location = useLocation();
   const [hasInviteCode, setHasInviteCode] = useState(false);
 
-  // Get invite code from URL if present
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const inviteCode = params.get("invite");

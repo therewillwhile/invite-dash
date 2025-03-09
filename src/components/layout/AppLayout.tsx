@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Shield, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     navigate("/");
   };
 
+  const openWebPlayer = () => {
+    window.open("https://hd.vcomputer.ru", "_blank");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {isAuthenticated && (
@@ -29,20 +34,29 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 className="text-xl font-bold cursor-pointer" 
                 onClick={() => navigate("/dashboard")}
               >
-                Project Invite
+                vcomputer
               </h1>
               {user?.isAdmin && (
                 <Badge variant="outline" className="hidden sm:flex items-center bg-primary/10 text-primary border-primary/30">
                   <Shield className="h-3 w-3 mr-1" />
-                  Admin
+                  Админ
                 </Badge>
               )}
             </div>
             <div className="flex items-center gap-3">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={openWebPlayer}
+                className="hidden sm:flex items-center"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Смотреть онлайн
+              </Button>
               <ThemeToggle />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">Выйти</span>
               </Button>
             </div>
           </div>
@@ -54,6 +68,3 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     </div>
   );
 };
-
-// Add this Badge component if it's not already imported
-import { Badge } from "@/components/ui/badge";

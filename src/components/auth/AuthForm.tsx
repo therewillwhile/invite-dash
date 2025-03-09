@@ -10,22 +10,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Apple, ExternalLink, Android } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(1, "Имя пользователя обязательно"),
+  password: z.string().min(1, "Пароль обязателен"),
 });
 
 const registerSchema = z.object({
-  inviteCode: z.string().min(1, "Invite code is required"),
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm your password"),
+  inviteCode: z.string().min(1, "Код приглашения обязателен"),
+  username: z.string().min(1, "Имя пользователя обязательно"),
+  password: z.string().min(6, "Пароль должен быть не менее 6 символов"),
+  confirmPassword: z.string().min(6, "Подтвердите пароль"),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Пароли не совпадают",
   path: ["confirmPassword"],
 });
 
@@ -35,6 +35,7 @@ export const AuthForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [hasInviteCode, setHasInviteCode] = useState(false);
 
   // Get invite code from URL if present
   useEffect(() => {
@@ -44,6 +45,7 @@ export const AuthForm: React.FC = () => {
     if (inviteCode) {
       setMode("register");
       registerForm.setValue("inviteCode", inviteCode);
+      setHasInviteCode(true);
     }
   }, [location]);
 
@@ -99,16 +101,20 @@ export const AuthForm: React.FC = () => {
     setMode(mode === "login" ? "register" : "login");
   };
 
+  const goToWebPlayer = () => {
+    window.open("https://hd.vcomputer.ru", "_blank");
+  };
+
   return (
     <Card className="w-full max-w-md glass-panel animate-in shadow-lg border border-border/30">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">
-          {mode === "login" ? "Login" : "Register"}
+          {mode === "login" ? "Вход" : "Регистрация"}
         </CardTitle>
         <CardDescription className="text-center">
           {mode === "login"
-            ? "Enter your credentials to login"
-            : "Create a new account with your invite code"}
+            ? "Введите свои учетные данные для входа"
+            : "Создайте новую учетную запись с помощью кода приглашения"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -120,9 +126,9 @@ export const AuthForm: React.FC = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Имя пользователя</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your username" {...field} autoComplete="username" />
+                      <Input placeholder="Введите имя пользователя" {...field} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,11 +139,11 @@ export const AuthForm: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Пароль</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="Введите пароль"
                         {...field}
                         autoComplete="current-password"
                       />
@@ -148,34 +154,36 @@ export const AuthForm: React.FC = () => {
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Login
+                Войти
               </Button>
             </form>
           </Form>
         ) : (
           <Form {...registerForm}>
             <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-              <FormField
-                control={registerForm.control}
-                name="inviteCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Invite Code</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your invite code" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!hasInviteCode && (
+                <FormField
+                  control={registerForm.control}
+                  name="inviteCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Код приглашения</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Введите код приглашения" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={registerForm.control}
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Имя пользователя</FormLabel>
                     <FormControl>
-                      <Input placeholder="Choose a username" {...field} autoComplete="username" />
+                      <Input placeholder="Выберите имя пользователя" {...field} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,11 +194,11 @@ export const AuthForm: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Пароль</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Create a password (min. 6 characters)"
+                        placeholder="Создайте пароль (мин. 6 символов)"
                         {...field}
                         autoComplete="new-password"
                       />
@@ -204,11 +212,11 @@ export const AuthForm: React.FC = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>Подтвердите пароль</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Confirm your password"
+                        placeholder="Подтвердите пароль"
                         {...field}
                         autoComplete="new-password"
                       />
@@ -219,15 +227,15 @@ export const AuthForm: React.FC = () => {
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Register
+                Зарегистрироваться
               </Button>
             </form>
           </Form>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col space-y-4">
         <Button variant="ghost" className="w-full" onClick={toggleMode}>
-          {mode === "login" ? "Don't have an account? Register" : "Already have an account? Login"}
+          {mode === "login" ? "Нет учетной записи? Зарегистрироваться" : "Уже есть учетная запись? Войти"}
         </Button>
       </CardFooter>
     </Card>
